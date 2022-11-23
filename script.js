@@ -404,12 +404,16 @@ function makePaymentWithStoredCard() {
         "currency": devise,
         "amount": product1totalprice * 100,
         "reference": new Date().getTime(),
+        "securePayment": $("#secure").is(":checked") ? true : false,
+        "success_url": returnUrl,
+        "failure_url": returnUrl,
       }
     };
   
     $.ajax(settings).done(function (response) {
-      console.log(response.approved)
-      if(response.approved) {
+      if(response.status === 'Pending' && response.redirectLink) {
+        window.location.replace(response.redirectLink);
+      } else if(response.approved) {
         $("#payment_result").text('Congratulations, you will look pretty with this tee-shirt. Thank you.').css('color', 'green');;
         $("#payment_result").show();
         $("#mainpageproduct").hide();
@@ -417,7 +421,7 @@ function makePaymentWithStoredCard() {
         $("#payment_result").text('We are sorry. Your payment is declined').css('color', 'red');
         $("#payment_result").show();
         $("#mainpageproduct").hide();
-      }
+      } 
     }).fail(function (jqXHR, textStatus) {
       console.log(textStatus);
       console.log(jqXHR);

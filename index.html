@@ -103,7 +103,7 @@
               <input id="zipCode" value="13100"><br />
 
             <div>
-              <input type="checkbox" id="secure" name="secure" value="false">
+              <input type="checkbox" id="secure" name="secure" value="false" checked>
               <label for="secure">Secure Payment</label>
             </div>
         </form>
@@ -138,7 +138,7 @@
           <a href="#"><img id="sofortpaymentimg" width="auto" height="42px" src="images/sofort.svg" onclick="sofortpayment()"></a>
         </div>
         <p style="font-style: italic;text-decoration: underline"> Stored Card Number : </p>
-        <div id="instruments"></div>
+        <div id="instruments" style="width: 50%"></div>
         <button id="pay-button-card" style="margin-bottom:10px" onclick="makePaymentWithStoredCard()">PAY</button>
         <a href="#" id="linkFrames" onclick="displayCardForm()">pay with another card</a>
 
