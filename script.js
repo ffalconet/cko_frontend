@@ -1,5 +1,6 @@
 
 var paymentEndpoint = 'http://localhost:4000/checkout/payments';
+var customerEndpoint = 'http://localhost:4000/checkout/customers';
 var sofortEndpoint = 'http://localhost:4000/checkout/sofortRequest';
 var returnUrl = 'http://127.0.0.1:1313/index.html';
 var POST = 'POST'
@@ -13,7 +14,7 @@ var city = 'Aix-En-Provence';
 var zipCode = '13100';
 var country;
 var devise;
-var local='EN-GB';
+var local='FR-FR';
 var securePayment;
 
 var tokenisationresult;
@@ -23,7 +24,7 @@ var maskedcardnumber;
 
 $("#paymentFrames").hide();
 $("#payment_result").hide();
-$("#devise").text("£");
+$("#devise").text("€");
 $("#payment_result_redirection").hide();
 
 // Parse redirection URL which is index.html 
@@ -142,7 +143,7 @@ function updateInfos() {
     $("#productAmount2").text("10 €");
     $("#sofortpaymentimg").show();
     devise = "EUR";
-    local = 'DE-DE';
+    local = 'FR-FR';
   }
 }
 
@@ -211,12 +212,22 @@ function makeSecurePayment() {
   });
 }
 
+function displayCardForm() {
+  if ( $("#payment-form").css('display') == 'none' || $("#payment-form").css("visibility") == "hidden") {
+    $("#payment-form").show();
+    $("a#linkFrames").html("Hide new card payment");
+  } else {
+    $("#payment-form").hide();
+    $("a#linkFrames").html("pay with another card");
+  }
+}
 
 function Paymentstage() {
 
   // On cache la partie resultat de paiement
   $("#payment_result").hide();
   $("#payment_result_redirection").hide();
+  $("#payment-form").hide();
 
   // Collecte de données
   product1totalprice = parseInt(document.getElementById("amount").innerText);
@@ -255,7 +266,7 @@ function Paymentstage() {
       $("#productAmount2").text("10 €");
       $("#sofortpaymentimg").show();
       devise = "EUR";
-      local = 'DE-DE';
+      local = 'FR-FR';
   }
 
   $("#mainpageproduct").hide();
@@ -274,8 +285,10 @@ function Paymentstage() {
       phone: phoneNumber
   };
 
+  getStoredPaymentDetails();
+
   Frames.init({
-      publicKey: "pk_test_4296fd52-efba-4a38-b6ce-cf0d93639d8a",
+      publicKey: "pk_sbox_w2jd5htaawrbo4eeziyn2dmifeu",
       modes: [],
       frameSelector: ".card-frame",
       localization: local,
@@ -310,6 +323,39 @@ function Paymentstage() {
   }
 }
 
+function getStoredPaymentDetails() {
+    var settings = {
+      "url": customerEndpoint + '/' + Email,
+      "method": GET,
+      "timeout": 0,
+      "headers": {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+    };
+
+    $.ajax(settings).done(function (response) {
+      if(response && response?.instruments?.length > 0) {
+        displayInstruments(response.instruments)
+      } 
+    }).fail(function (jqXHR, textStatus) {
+      var result = $('#instruments');
+      result.append('<label style="width:25rem;color:red" >No stored card</label>');
+      $("#pay-button-card").hide();
+      displayCardForm();
+  });
+
+}
+
+function displayInstruments(instruments) {
+  var result = $('#instruments');
+  result.html('');
+  for (var i = 0; i < instruments.length; i++) {
+    result.append('<label style="width:25rem" ><input type="radio" id="instrument" name="instrument" value="' + instruments[i].id + '" /> ' + 
+    instruments[i].scheme + ' - ' + instruments[i].bin + '********' + instruments[i].last4 + ' - ' +
+    instruments[i].expiry_month + '/' + instruments[i].expiry_year
+    + '</label>');
+  }
+}
 
 // payment Sofort request
 // redirection to sofort Pages 
@@ -336,4 +382,50 @@ function sofortpayment() {
       window.location.replace(response.redirectLink);
     }
   });
+}
+
+function makePaymentWithStoredCard() {
+  console.log("Le client veut payer avec une carte enregistrée");
+
+  var cardSelected  = $("#instrument:checked").val();
+  
+  if (cardSelected && cardSelected.startsWith('src_')) {
+    var settings = {
+      "url": paymentEndpoint,
+      "method": POST,
+      "timeout": 0,
+      "headers": {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      "data": {
+        "source": cardSelected,
+        "email": Email,
+        "name": fullname,
+        "currency": devise,
+        "amount": product1totalprice * 100,
+        "reference": new Date().getTime(),
+      }
+    };
+  
+    $.ajax(settings).done(function (response) {
+      console.log(response.approved)
+      if(response.approved) {
+        $("#payment_result").text('Congratulations, you will look pretty with this tee-shirt. Thank you.').css('color', 'green');;
+        $("#payment_result").show();
+        $("#mainpageproduct").hide();
+      } else {
+        $("#payment_result").text('We are sorry. Your payment is declined').css('color', 'red');
+        $("#payment_result").show();
+        $("#mainpageproduct").hide();
+      }
+    }).fail(function (jqXHR, textStatus) {
+      console.log(textStatus);
+      console.log(jqXHR);
+  });
+
+  } else {
+    $("#payment_result_redirection").text('You have to select a card payment').css('color', 'red');
+    $("#payment_result_redirection").show();
+    $("#mainpageproduct").hide();
+  }
 }

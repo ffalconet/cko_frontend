@@ -13,6 +13,14 @@ html, body {
   justify-content:center;
 }
 
+.payment-bloc {
+  max-width: 80%;
+  margin: 0 auto;
+  justify-content:center;
+  display: flex;
+  flex-direction: column;
+}
+
 /* Columns */
 .left-column {
   width: 65%;
@@ -251,7 +259,6 @@ label {
 
 #payment-form {
     max-width: 70rem;
-    margin: 0 auto;
 }
 
 iframe {
@@ -261,7 +268,7 @@ iframe {
 .one-liner {
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: left;
 }
 
 #pay-button {
@@ -273,6 +280,18 @@ iframe {
     width: 100%;
     background-color: #13395e;
     box-shadow: 0 1px 3px 0 rgba(19, 57, 94, 0.4);
+}
+
+#pay-button-card {
+  border: none;
+  border-radius: 3px;
+  color: #fff;
+  font-weight: 500;
+  height: 40px;
+  width: 175px;
+  background-color: #13395e;
+  box-shadow: 0 1px 3px 0 rgba(19, 57, 94, 0.4);
+  margin-bottom: 10px;
 }
 
 #pay-button:active {
